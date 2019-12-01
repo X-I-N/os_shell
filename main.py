@@ -7,7 +7,7 @@ class Process:
         else:
             self.parent = running
         self.status = status
-        self.child = None
+        self.child = []
 
 
 instructions = []
@@ -48,7 +48,7 @@ def execute(instruction):
 
 def create_process(name, priority):
     pro = Process(name, priority)
-    running.child = pro
+    running.child.append(pro)
     if priority == 1:
         processes_1.append(pro)
     elif priority == 2:
@@ -70,7 +70,6 @@ def schedule():
 
 
 def time_out():
-    # todo 按优先级对队列进行判断
     global count_1, count_2, running
 
     if running.priority == 1:
