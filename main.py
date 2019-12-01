@@ -43,7 +43,7 @@ def execute(instruction):
         create_process(name, int(priority))
         schedule()
     elif type_ins == 'to':
-        pass
+        time_out()
 
 
 def create_process(name, priority):
@@ -66,6 +66,31 @@ def schedule():
         running.status = 'ready'
         processes_1[count_1].status = 'running'
         running = processes_1[count_1]
+    print(running.name, end=' ')
+
+
+def time_out():
+    # todo 按优先级对队列进行判断
+    global count_1, count_2, running
+
+    if running.priority == 1:
+        count_1 += 1
+        count_1 %= len(processes_1)
+        if len(processes_2) > 0:
+            running.status = 'ready'
+            processes_2[count_2].status = 'running'
+            running = processes_2[count_2]
+        else:
+            running.status = 'ready'
+            processes_2[count_2].status = 'running'
+            running = processes_2[count_2]
+    elif running.priority == 2:
+        count_2 += 1
+        count_2 %= len(processes_2)
+        running.status = 'ready'
+        processes_2[count_2].status = 'running'
+        running = processes_2[count_2]
+
     print(running.name, end=' ')
 
 
