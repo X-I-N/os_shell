@@ -11,6 +11,7 @@ class Process:
 
 
 instructions = []
+process_0 = None
 processes_1 = []
 processes_2 = []
 count_1 = 0
@@ -20,8 +21,10 @@ running = None
 
 
 def init():
+    global process_0
     print("Process init is running ......")
     pro = Process('init', 0)
+    process_0 = pro
     pro.status = 'running'
     global running
     running = pro
@@ -44,6 +47,10 @@ def execute(instruction):
         schedule()
     elif type_ins == 'to':
         time_out()
+    elif type_ins == 'de':
+        name = instruction.split()[1]
+        pro = get_process(name)
+        destroy_process(pro)
 
 
 def create_process(name, priority):
@@ -58,6 +65,7 @@ def create_process(name, priority):
 def schedule():
     global running
     run_priority = running.priority
+
     if len(processes_2) != 0 and run_priority < 2:
         running.status = 'ready'
         processes_2[count_2].status = 'running'
@@ -66,31 +74,68 @@ def schedule():
         running.status = 'ready'
         processes_1[count_1].status = 'running'
         running = processes_1[count_1]
+
     print(running.name, end=' ')
 
 
-def time_out():
+def run_next_process():
     global count_1, count_2, running
+
+    if len(processes_1) == 0 and len(processes_2) == 0:
+        running = process_0
+    elif len(processes_2) > 0:
+        running.status = 'ready'
+        processes_2[count_2].status = 'running'
+        running = processes_2[count_2]
+    else:
+        running.status = 'ready'
+        processes_1[count_1].status = 'running'
+        running = processes_1[count_1]
+
+
+def time_out():
+    global count_1, count_2
 
     if running.priority == 1:
         count_1 += 1
         count_1 %= len(processes_1)
-        if len(processes_2) > 0:
-            running.status = 'ready'
-            processes_2[count_2].status = 'running'
-            running = processes_2[count_2]
-        else:
-            running.status = 'ready'
-            processes_2[count_2].status = 'running'
-            running = processes_2[count_2]
     elif running.priority == 2:
         count_2 += 1
         count_2 %= len(processes_2)
-        running.status = 'ready'
-        processes_2[count_2].status = 'running'
-        running = processes_2[count_2]
 
+    run_next_process()
     print(running.name, end=' ')
+
+
+def get_process(name):
+    for i in range(len(processes_1)):
+        if name == processes_1[i].name:
+            return processes_1[i]
+    for j in range(len(processes_2)):
+        if name == processes_2[j].name:
+            return processes_2[j]
+
+
+def destroy_process(pro, is_print=True):
+    if len(pro.child) is not 0:
+        for ii in range(len(pro.child)):
+            destroy_process(pro.child[ii], is_print=False)
+        pro.child.clear()
+    if pro.priority == 1:
+        global count_1
+        processes_1.remove(pro)
+        if len(processes_1) is not 0:
+            count_1 %= len(processes_1)
+    if pro.priority == 2:
+        global count_2
+        processes_2.remove(pro)
+        if len(processes_2) is not 0:
+            count_2 %= len(processes_2)
+    if pro == running:
+        run_next_process()
+
+    if is_print:
+        print(running.name, end=' ')
 
 
 if __name__ == '__main__':
