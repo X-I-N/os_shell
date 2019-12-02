@@ -44,7 +44,6 @@ def execute(instruction):
         name = instruction.split()[1]
         priority = instruction.split()[2]
         create_process(name, int(priority))
-        schedule()
     elif type_ins == 'to':
         time_out()
     elif type_ins == 'de':
@@ -56,25 +55,13 @@ def execute(instruction):
 def create_process(name, priority):
     pro = Process(name, priority)
     running.child.append(pro)
+
     if priority == 1:
         processes_1.append(pro)
     elif priority == 2:
         processes_2.append(pro)
 
-
-def schedule():
-    global running
-    run_priority = running.priority
-
-    if len(processes_2) != 0 and run_priority < 2:
-        running.status = 'ready'
-        processes_2[count_2].status = 'running'
-        running = processes_2[count_2]
-    elif len(processes_1) != 0 and run_priority < 1:
-        running.status = 'ready'
-        processes_1[count_1].status = 'running'
-        running = processes_1[count_1]
-
+    run_next_process()
     print(running.name, end=' ')
 
 
@@ -116,11 +103,8 @@ def get_process(name):
             return processes_2[j]
 
 
-def destroy_process(pro, is_print=True):
-    if len(pro.child) is not 0:
-        for ii in range(len(pro.child)):
-            destroy_process(pro.child[ii], is_print=False)
-        pro.child.clear()
+def remove_process(pro):
+    global count_1, count_2
     if pro.priority == 1:
         global count_1
         processes_1.remove(pro)
@@ -133,6 +117,15 @@ def destroy_process(pro, is_print=True):
             count_2 %= len(processes_2)
     if pro == running:
         run_next_process()
+
+
+def destroy_process(pro, is_print=True):
+    if len(pro.child) is not 0:
+        for ii in range(len(pro.child)):
+            destroy_process(pro.child[ii], is_print=False)
+        pro.child.clear()
+
+    remove_process(pro)
 
     if is_print:
         print(running.name, end=' ')
