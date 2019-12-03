@@ -19,13 +19,6 @@ class Resource:
         self.wait_list = []
 
 
-class ProRes:
-    def __init__(self, pro, res, num):
-        self.pro = pro
-        self.res = res
-        self.num = num
-
-
 instructions = []
 process_0 = None
 processes_1 = []
@@ -88,16 +81,39 @@ def execute(instruction):
 
 
 def create_process(name, priority):
+    pre_priority = running.priority
     pro = Process(name, priority)
     running.child.append(pro)
 
     if priority == 1:
-        processes_1.append(pro)
+        insert_process_to_ready(1, pro)
     elif priority == 2:
-        processes_2.append(pro)
+        insert_process_to_ready(2, pro)
+        if pre_priority == 1:
+            global count_1
+            count_1 += 1
+            count_1 %= len(processes_1)
 
     run_next_process('ready')
     print(running.name, end=' ')
+
+
+def insert_process_to_ready(priority, pro):
+    global count_1, count_2
+    if priority == 1:
+        if count_1 == 0:
+            processes_1.append(pro)
+        else:
+            index = count_1 % len(processes_1)
+            processes_1.insert(index, pro)
+            count_1 += 1
+    elif priority == 2:
+        if count_2 == 0:
+            processes_2.append(pro)
+        else:
+            index = count_2 % len(processes_2)
+            processes_2.insert(index, pro)
+            count_2 += 1
 
 
 def run_next_process(status):
@@ -146,14 +162,20 @@ def remove_process(pro, queue='ready', status='ready'):
 
     if pro in processes_1:
         global count_1
+        idx = processes_1.index(pro)
         processes_1.remove(pro)
-        if len(processes_1) is not 0:
-            count_1 %= len(processes_1)
+        if idx < count_1:
+            count_1 -= 1
+        elif count_1 == len(processes_1):
+            count_1 = 0
     if pro in processes_2:
         global count_2
+        idx = processes_2.index(pro)
         processes_2.remove(pro)
-        if len(processes_2) is not 0:
-            count_2 %= len(processes_2)
+        if idx < count_2:
+            count_2 -= 1
+        elif count_2 == len(processes_2):
+            count_2 = 0
     if queue == 'all':
         if pro.status == 'blocked':
             blocked_list.remove(pro)
@@ -167,8 +189,9 @@ def destroy_process(pro, is_print=True):
             destroy_process(pro.child[i], is_print=False)
         pro.child.clear()
 
-    if pro.resource is not [0, 0, 0, 0]:
+    if pro.resource != [0, 0, 0, 0]:
         release_all_res(pro)
+    activate_blocked_process()
     remove_process(pro, queue='all')
 
     if is_print:
@@ -203,33 +226,44 @@ def release_all_res(pro):
             resources[i].available += num
             pro.resource[i] = 0
 
-    activate_blocked_process()
-
 
 def release_part_res(pro, res_type, num):
-    pass
+    res_type = int(res_type[1]) - 1
+    r = resources[res_type]
+
+    if num <= pro.resource[res_type]:
+        pro.resource[res_type] -= num
+        r.available += num
+    else:
+        print("Number error!")
+
+    activate_blocked_process()
+    run_next_process('ready')
+    print(running.name, end=' ')
 
 
 def activate_blocked_process():
     global blocked_list
-    for i in range(len(blocked_list)):
-        pro = blocked_list[i]
+    while len(blocked_list) != 0:
+        pro = blocked_list[0]
         for j in range(4):
             r = resources[j]
             request_num = pro.request[j]
             if 0 < request_num <= r.available:
                 r.available -= request_num
+                pro.resource[j] += request_num
                 pro.request[j] = 0
                 r.wait_list.remove(pro)
 
         if pro.request == [0, 0, 0, 0]:
             pro.status = 'ready'
             if pro.priority == 1:
-                processes_1.append(pro)
+                insert_process_to_ready(1, pro)
             elif pro.priority == 2:
-                processes_2.append(pro)
-
-    blocked_list = [pro for pro in blocked_list if pro.request is not [0, 0, 0, 0]]
+                insert_process_to_ready(2, pro)
+            blocked_list.remove(pro)
+        else:
+            return
 
 
 if __name__ == '__main__':
@@ -237,6 +271,6 @@ if __name__ == '__main__':
     get_instructions('D://test.txt')
     num_instructions = len(instructions)
     for ii in range(num_instructions):
-        if ii == 16:
+        if ii == 13:
             a = 1
         execute(instructions[ii])
