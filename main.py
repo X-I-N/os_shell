@@ -1,3 +1,6 @@
+import sys
+
+
 class Process:
     def __init__(self, name, priority, status='ready'):
         self.name = name
@@ -33,7 +36,6 @@ running = None
 def init():
     global process_0, resources
 
-    print("Process init is running ......")
     pro = Process('init', 0)
     process_0 = pro
     pro.status = 'running'
@@ -46,7 +48,7 @@ def init():
     R4 = Resource(4)
     resources = [R1, R2, R3, R4]
 
-    print("> init", end=' ')
+    print(running.name, end=' ')
 
 
 def get_instructions(file_path):
@@ -268,7 +270,8 @@ def activate_blocked_process():
 
 if __name__ == '__main__':
     init()
-    get_instructions('D://test.txt')
+    get_instructions(sys.argv[1])
+    print(sys.argv[1])
     num_instructions = len(instructions)
     for ii in range(num_instructions):
         if ii == 13:
