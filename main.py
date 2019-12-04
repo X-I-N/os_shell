@@ -159,7 +159,7 @@ def get_process(name):
             return blocked_list[k]
 
 
-def remove_process(pro, queue='ready', status='ready'):
+def remove_process(pro, mode):
     global count_1, count_2
 
     if pro in processes_1:
@@ -178,11 +178,14 @@ def remove_process(pro, queue='ready', status='ready'):
             count_2 -= 1
         elif count_2 == len(processes_2):
             count_2 = 0
-    if queue == 'all':
+    if mode == 'destroy':
         if pro.status == 'blocked':
             blocked_list.remove(pro)
-    if pro == running:
-        run_next_process(status)
+        if pro == running:
+            run_next_process('ready')
+    elif mode == 'request':
+        if pro == running:
+            run_next_process('blocked')
 
 
 def destroy_process(pro, is_print=True):
@@ -194,7 +197,7 @@ def destroy_process(pro, is_print=True):
     if pro.resource != [0, 0, 0, 0]:
         release_all_res(pro)
     activate_blocked_process()
-    remove_process(pro, queue='all')
+    remove_process(pro, mode='destroy')
 
     if is_print:
         print(running.name, end=' ')
@@ -216,7 +219,7 @@ def request_res(pro, res_type, num):
             pro.status = 'blocked'
             pro.request[res_type] = num
             blocked_list.append(pro)
-            remove_process(pro, status='blocked')
+            remove_process(pro, mode='request')
 
     print(running.name, end=' ')
 
@@ -271,9 +274,6 @@ def activate_blocked_process():
 if __name__ == '__main__':
     init()
     get_instructions(sys.argv[1])
-    print(sys.argv[1])
     num_instructions = len(instructions)
     for ii in range(num_instructions):
-        if ii == 13:
-            a = 1
         execute(instructions[ii])
