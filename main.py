@@ -61,25 +61,26 @@ def get_instructions(file_path):
 def execute(instruction):
     global running
 
-    type_ins = instruction.split()[0]
-    if type_ins == 'cr':
-        name = instruction.split()[1]
-        priority = int(instruction.split()[2])
-        create_process(name, priority)
-    elif type_ins == 'to':
-        time_out()
-    elif type_ins == 'de':
-        name = instruction.split()[1]
-        pro = get_process(name)
-        destroy_process(pro)
-    elif type_ins == 'req':
-        res_type = instruction.split()[1]
-        num = int(instruction.split()[2])
-        request_res(running, res_type, num)
-    elif type_ins == 'rel':
-        res_type = instruction.split()[1]
-        num = int(instruction.split()[2])
-        release_part_res(running, res_type, num)
+    if len(instruction.split()) != 0:
+        type_ins = instruction.split()[0]
+        if type_ins == 'cr':
+            name = instruction.split()[1]
+            priority = int(instruction.split()[2])
+            create_process(name, priority)
+        elif type_ins == 'to':
+            time_out()
+        elif type_ins == 'de':
+            name = instruction.split()[1]
+            pro = get_process(name)
+            destroy_process(pro)
+        elif type_ins == 'req':
+            res_type = instruction.split()[1]
+            num = int(instruction.split()[2])
+            request_res(running, res_type, num)
+        elif type_ins == 'rel':
+            res_type = instruction.split()[1]
+            num = int(instruction.split()[2])
+            release_part_res(running, res_type, num)
 
 
 def create_process(name, priority):
